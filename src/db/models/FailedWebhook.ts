@@ -1,48 +1,43 @@
+import { Schema, model, Document } from 'mongoose';
 
-import { Model, DataTypes } from 'sequelize';
-import { sequelize } from '../database';
-
-class FailedWebhook extends Model {
-  public id!: number;
-  public payload!: object;
-  public headers!: object;
-  public target_url!: string;
-  public error_message!: string;
-  public status!: string;
-
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+interface IFailedWebhook extends Document {
+  payload: object;
+  headers: object;
+  target_url: string;
+  error_message: string;
+  status: string;
+  source: string;
 }
 
-FailedWebhook.init({
-  id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
+const FailedWebhookSchema = new Schema({
   payload: {
-    type: DataTypes.JSON,
-    allowNull: false,
+    type: Object,
+    required: true,
   },
   headers: {
-    type: DataTypes.JSON,
-    allowNull: false,
+    type: Object,
+    required: true,
   },
   target_url: {
-    type: DataTypes.STRING,
-    allowNull: false,
+    type: String,
+    required: true,
   },
   error_message: {
-    type: DataTypes.STRING,
-    allowNull: false,
+    type: String,
+    required: true,
   },
   status: {
-    type: DataTypes.STRING,
-    defaultValue: 'failed',
+    type: String,
+    default: 'failed',
+  },
+  source: {
+    type: String,
+    required: true,
   },
 }, {
-  sequelize,
-  tableName: 'failed_webhooks',
+  timestamps: true,
 });
+
+const FailedWebhook = model<IFailedWebhook>('FailedWebhook', FailedWebhookSchema);
 
 export default FailedWebhook;

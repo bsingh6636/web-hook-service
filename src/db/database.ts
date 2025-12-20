@@ -1,7 +1,16 @@
+import mongoose from 'mongoose';
 
-import { Sequelize } from 'sequelize';
-
-export const sequelize = new Sequelize({
-  dialect: 'sqlite',
-  storage: './database.sqlite'
-});
+export const connectDB = async () => {
+  try {
+    const mongoUri = process.env.MONGODB_URI;
+    if (!mongoUri) {
+      console.error('MONGODB_URI is not set in environment variables.');
+      process.exit(1);
+    }
+    await mongoose.connect(mongoUri);
+    console.log('MongoDB connected');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    process.exit(1);
+  }
+};
