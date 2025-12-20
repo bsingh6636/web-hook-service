@@ -1,6 +1,6 @@
 
 import { Router, Request, Response } from 'express';
-import FailedWebhook from '../db/models/FailedWebhook';
+import { getMissedWebhooks } from '../services/webhookService';
 
 const router = Router();
 
@@ -9,7 +9,7 @@ router.get('/', async (req: Request, res: Response) => {
   const filter = source ? { source: source as string } : {};
 
   try {
-    const missedRequests = await FailedWebhook.find(filter);
+    const missedRequests = await getMissedWebhooks(filter);
     res.status(200).json(missedRequests);
   } catch (error) {
     res.status(500).send('Error fetching missed requests');

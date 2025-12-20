@@ -1,10 +1,11 @@
 import { Schema, model, Document } from 'mongoose';
 
-interface IFailedWebhook extends Document {
+export interface IFailedWebhook extends Document {
   payload: object;
   headers: object;
   target_url: string;
   error_message: string;
+  error_details?: object;
   status: string;
   source: string;
 }
@@ -25,6 +26,10 @@ const FailedWebhookSchema = new Schema({
   error_message: {
     type: String,
     required: true,
+  },
+  error_details: {
+    type: Object,
+    required: false,
   },
   status: {
     type: String,

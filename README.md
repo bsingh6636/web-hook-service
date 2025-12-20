@@ -14,7 +14,7 @@ This service receives webhooks from multiple sources, forwards them to a specifi
 
     ```
     MONGODB_URI=your-mongodb-connection-string
-    TARGET_URL_WHATSAPP=https://your-whatsapp-target-url.com
+    TARGET_URL_WHATSAPP_MESSAGES=https://your-whatsapp-messages-target-url.com
     TARGET_URL_TELEGRAM=https://your-telegram-target-url.com
     ```
 
@@ -46,7 +46,12 @@ To build and run the server in production:
 
 ## API Endpoints
 
-*   `POST /webhook/:source`: The endpoint to send your webhooks to. Replace `:source` with the name of your webhook source (e.g., `whatsapp`, `telegram`). The service will forward the request to the corresponding `TARGET_URL_*`.
+### Generic Webhooks
+*   `POST /webhook/:source`: The endpoint for simple, single-endpoint webhook sources. Replace `:source` with the name of your webhook source (e.g., `telegram`). The service will forward the request to the corresponding `TARGET_URL_*`.
 
+### WhatsApp Webhooks
+*   `POST /webhook/whatsapp/messages`: An example endpoint for a specific WhatsApp event. More routes can be added under `/webhook/whatsapp/`.
+
+### Missed Requests
 *   `GET /missed-requests`: Retrieves a list of all the webhooks that failed to be forwarded.
     *   **Filter by source:** You can filter the results by source using a query parameter: `GET /missed-requests?source=whatsapp`.

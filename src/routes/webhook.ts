@@ -1,10 +1,15 @@
 
 import { Router, Request, Response } from 'express';
 import axios from 'axios';
-import FailedWebhook from '../db/models/FailedWebhook';
+import { saveFailedWebhook } from '../services/webhookService';
+import whatsappRouter from './whatsapp';
 
 const router = Router();
 
+// Delegate to the WhatsApp router
+router.use('/whatsapp', whatsappRouter);
+
+// Generic route for other sources
 router.post('/:source', async (req: Request, res: Response) => {
   const { source } = req.params;
 
@@ -32,14 +37,13 @@ router.post('/:source', async (req: Request, res: Response) => {
         errorMessage = error.message;
     }
     
-    const failedWebhook = new FailedWebhook({
+    await saveFailedWebhook({
       source,
       payload: body,
-      headers: headers,
+      headers,
       target_url: targetUrl,
       error_message: errorMessage,
     });
-    await failedWebhook.save();
 
     res.status(500).send(`Failed to forward webhook for '${source}'`);
   }

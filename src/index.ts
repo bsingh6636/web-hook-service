@@ -11,8 +11,8 @@ dotenv.config();
 const app = express();
 app.use(json());
 
-app.use('/webhook', webhookRouter);
-app.use('/missed-requests', missedRequestsRouter);
+app.use('/api/webhook', webhookRouter);
+app.use('/api/missed-requests', missedRequestsRouter);
 
 const PORT = process.env.PORT || 3000;
 
