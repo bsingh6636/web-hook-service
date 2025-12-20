@@ -64,11 +64,22 @@ const handleWebhook = async (req: Request, res: Response, targetUrl: string | un
   }
 };
 
-router.post('/whatsapp', async (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response) => {
+  logger.info(`Test webhook for source: ${source}`, { req });
+  await saveFailedWebhook({
+    source,
+    payload: req.body,
+    headers: req.headers,
+    error_message: `Test for source '${source}' is not configured`,
+  })
+  res.status(200).send('WhatsApp webhook forwarding service');
+})
+
+router.post('/', async (req: Request, res: Response) => {
   await handleWebhook(req, res, process.env.TARGET_URL_WHATSAPP_MESSAGES);
 });
 
-router.post('/whatsapp-conv', async (req: Request, res: Response) => {
+router.post('/conv', async (req: Request, res: Response) => {
   await handleWebhook(req, res, process.env.TARGET_URL_WHATSAPP_CONVO);
 });
 
