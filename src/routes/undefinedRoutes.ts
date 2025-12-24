@@ -12,7 +12,7 @@ export const undefinedRouteHandler = async (req: Request, res: Response) => {
       body,
     });
     await undefinedRoute.save();
-    res.status(404).send('Not Found');
+    res.status(404).send('request accepted but route not found');
   } catch (error) {
     console.error('Error saving undefined route request:', error);
     res.status(500).send('Internal Server Error');
