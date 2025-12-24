@@ -3,6 +3,7 @@ import { Router, Request, Response } from 'express';
 import axios from 'axios';
 import { saveFailedWebhook } from '../services/webhookService';
 import whatsappRouter from './whatsapp';
+import logger from '../utils/logger';
 
 const router = Router();
 
@@ -21,15 +22,19 @@ router.post('/:source', async (req: Request, res: Response) => {
 
   if (!targetUrl) {
     const errorMessage = `TARGET_URL for source '${source}' is not set`;
-    console.error(errorMessage);
-    await saveFailedWebhook({
-      source,
-      payload: req.body,
-      headers: req.headers,
-      target_url: 'NOT_CONFIGURED',
-      error_message: errorMessage,
-    });
-    return res.status(500).send('Internal server error: Target URL not configured');
+    logger.error(errorMessage);
+    try {
+      await saveFailedWebhook({
+        source,
+        payload: req.body,
+        headers: req.headers,
+        target_url: 'NOT_CONFIGURED',
+        error_message: errorMessage,
+      });
+    } catch (dbError: unknown) {
+      logger.error(`Failed to persist failed webhook for source '${source}'`, { dbError });
+    }
+    return res.status(200).send(`Webhook received for '${source}'`);
   }
 
   const { body, headers } = req;
@@ -38,22 +43,46 @@ router.post('/:source', async (req: Request, res: Response) => {
     // Forward the webhook
     await axios.post(targetUrl, body, { headers });
     res.status(200).send(`Webhook for '${source}' forwarded successfully`);
-  } catch (error) {
+  } catch (error: unknown) {
     // If forwarding fails, save the request to the database
     let errorMessage = 'An unknown error occurred';
-    if (error instanceof Error) {
-        errorMessage = error.message;
+    let errorDetails: unknown = {};
+
+    if (axios.isAxiosError(error)) {
+      errorMessage = error.message;
+      errorDetails = {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        headers: error.response?.headers,
+      };
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+      errorDetails = {
+        message: error.message,
+        stack: error.stack,
+      };
     }
-    
-    await saveFailedWebhook({
-      source,
-      payload: body,
-      headers,
-      target_url: targetUrl,
-      error_message: errorMessage,
+
+    logger.error(`Failed to forward webhook for source '${source}' to ${targetUrl}`, {
+      errorMessage,
+      errorDetails,
     });
 
-    res.status(500).send(`Failed to forward webhook for '${source}'`);
+    try {
+      await saveFailedWebhook({
+        source,
+        payload: body,
+        headers,
+        target_url: targetUrl,
+        error_message: errorMessage,
+        error_details: errorDetails,
+      });
+    } catch (dbError: unknown) {
+      logger.error(`Failed to persist failed webhook for source '${source}'`, { dbError });
+    }
+
+    res.status(200).send(`Webhook received for '${source}'`);
   }
 });
 

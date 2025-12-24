@@ -1,6 +1,5 @@
 
 import express from 'express';
-import { json } from 'body-parser';
 import { connectDB } from './db/database';
 import webhookRouter from './routes/webhook';
 import missedRequestsRouter from './routes/missedRequests';
@@ -9,13 +8,23 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const app = express();
-app.use(json());
+export const app = express();
+app.use(express.json());
 
-app.use('/api/webhook', webhookRouter);
+app.use(async (_req, _res, next) => {
+  try {
+    await connectDB();
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+  } finally {
+    next();
+  }
+});
+
+app.use('/webhook', webhookRouter);
 app.use('/api/missed-requests', missedRequestsRouter);
 
-app.use('/api/health', (req, res) => {
+app.use('/api/health', (_req, res) => {
   res.status(200).send('OK');
 });
 
@@ -23,11 +32,8 @@ app.use(undefinedRouteHandler);
 
 const PORT = process.env.PORT || 3000;
 
-const startServer = async () => {
-  await connectDB();
+if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
-};
-
-startServer();
+}

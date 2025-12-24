@@ -1,4 +1,3 @@
-
 import { Router, Request, Response } from 'express';
 import axios from 'axios';
 import { saveFailedWebhook } from '../../services/webhookService';
@@ -13,14 +12,18 @@ const handleWebhook = async (req: Request, res: Response, targetUrl: string | un
   if (!targetUrl) {
     const errorMessage = `Target URL for source '${source}' is not configured`;
     logger.error(errorMessage);
-    await saveFailedWebhook({
-      source,
-      payload: req.body,
-      headers: req.headers,
-      target_url: 'NOT_CONFIGURED',
-      error_message: errorMessage,
-    });
-    return res.status(500).send(`Failed to forward webhook for '${source}'`);
+    try {
+      await saveFailedWebhook({
+        source,
+        payload: req.body,
+        headers: req.headers,
+        target_url: 'NOT_CONFIGURED',
+        error_message: errorMessage,
+      });
+    } catch (dbError: unknown) {
+      logger.error(`Failed to persist failed webhook for source '${source}'`, { dbError });
+    }
+    return res.status(200).send(`Webhook received for '${source}'`);
   }
 
   try {
@@ -52,30 +55,38 @@ const handleWebhook = async (req: Request, res: Response, targetUrl: string | un
       errorDetails,
     });
 
-    await saveFailedWebhook({
-      source,
-      payload: req.body,
-      headers: req.headers,
-      target_url: targetUrl || 'NOT_CONFIGURED',
-      error_message: errorMessage,
-      error_details: errorDetails,
-    });
+    try {
+      await saveFailedWebhook({
+        source,
+        payload: req.body,
+        headers: req.headers,
+        target_url: targetUrl || 'NOT_CONFIGURED',
+        error_message: errorMessage,
+        error_details: errorDetails,
+      });
+    } catch (dbError: unknown) {
+      logger.error(`Failed to persist failed webhook for source '${source}'`, { dbError });
+    }
 
-    res.status(500).send(`Failed to forward webhook for '${source}'`);
+    res.status(200).send(`Webhook received for '${source}'`);
   }
 };
 
 router.get('/', async (req: Request, res: Response) => {
   logger.info(`Test webhook for source: ${source}`, { req });
-  await saveFailedWebhook({
-    source,
-    payload: req.query,
-    headers: req.headers,
-    target_url: 'NOT_APPLICABLE_FOR_GET',
-    error_message: `Test for source '${source}' is not configured`,
-  })
+  try {
+    await saveFailedWebhook({
+      source,
+      payload: req.query,
+      headers: req.headers,
+      target_url: 'NOT_APPLICABLE_FOR_GET',
+      error_message: `Test for source '${source}' is not configured`,
+    });
+  } catch (dbError: unknown) {
+    logger.error(`Failed to persist failed webhook for source '${source}'`, { dbError });
+  }
   res.status(200).send('WhatsApp webhook forwarding service');
-})
+});
 
 router.post('/', async (req: Request, res: Response) => {
   await handleWebhook(req, res, process.env.TARGET_URL_WHATSAPP_MESSAGES);

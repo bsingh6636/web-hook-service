@@ -2,14 +2,14 @@
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
     // File Layout
-    "rootDir": "src",
+    "rootDir": ".",
     "outDir": "dist",
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
     "module": "commonjs",
     "target": "esnext",
-    "types": [],
+    "types": ["node"],
     "lib": ["es6", "dom"],
     // For nodejs:
     // "lib": ["esnext"],
@@ -41,4 +41,7 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
   }
+  ,
+  "include": ["src/**/*", "api/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
