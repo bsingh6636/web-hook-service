@@ -3,7 +3,8 @@ import UndefinedRoute from '../db/models/UndefinedRoute';
 
 export const undefinedRouteHandler = async (req: Request, res: Response) => {
   try {
-    const { method, originalUrl, headers, body } = req;
+    const { method, originalUrl, headers } = req;
+    const body = req.body || {};
     const undefinedRoute = new UndefinedRoute({
       method,
       url: originalUrl,

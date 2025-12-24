@@ -15,6 +15,10 @@ app.use(json());
 app.use('/api/webhook', webhookRouter);
 app.use('/api/missed-requests', missedRequestsRouter);
 
+app.use('/api/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
 app.use(undefinedRouteHandler);
 
 const PORT = process.env.PORT || 3000;

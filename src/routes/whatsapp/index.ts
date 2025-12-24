@@ -17,9 +17,10 @@ const handleWebhook = async (req: Request, res: Response, targetUrl: string | un
       source,
       payload: req.body,
       headers: req.headers,
+      target_url: 'NOT_CONFIGURED',
       error_message: errorMessage,
     });
-    return res.status(200).send(`Webhook for '${source}' forwarded successfully`);
+    return res.status(500).send(`Failed to forward webhook for '${source}'`);
   }
 
   try {
@@ -55,7 +56,7 @@ const handleWebhook = async (req: Request, res: Response, targetUrl: string | un
       source,
       payload: req.body,
       headers: req.headers,
-      target_url: targetUrl,
+      target_url: targetUrl || 'NOT_CONFIGURED',
       error_message: errorMessage,
       error_details: errorDetails,
     });
@@ -68,8 +69,9 @@ router.get('/', async (req: Request, res: Response) => {
   logger.info(`Test webhook for source: ${source}`, { req });
   await saveFailedWebhook({
     source,
-    payload: req.body,
+    payload: req.query,
     headers: req.headers,
+    target_url: 'NOT_APPLICABLE_FOR_GET',
     error_message: `Test for source '${source}' is not configured`,
   })
   res.status(200).send('WhatsApp webhook forwarding service');

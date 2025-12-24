@@ -20,7 +20,15 @@ router.post('/:source', async (req: Request, res: Response) => {
   const targetUrl = process.env[`TARGET_URL_${source.toUpperCase()}`];
 
   if (!targetUrl) {
-    console.error(`TARGET_URL for source '${source}' is not set`);
+    const errorMessage = `TARGET_URL for source '${source}' is not set`;
+    console.error(errorMessage);
+    await saveFailedWebhook({
+      source,
+      payload: req.body,
+      headers: req.headers,
+      target_url: 'NOT_CONFIGURED',
+      error_message: errorMessage,
+    });
     return res.status(500).send('Internal server error: Target URL not configured');
   }
 
