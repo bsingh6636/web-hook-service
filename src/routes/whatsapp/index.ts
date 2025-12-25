@@ -88,12 +88,14 @@ router.get('/', async (req: Request, res: Response) => {
   res.status(200).send('WhatsApp webhook forwarding service');
 });
 
+const messagesUrl = 'https://dev.brijesh.fun/webhook/whatsapp';
 router.post('/', async (req: Request, res: Response) => {
-  await handleWebhook(req, res, process.env.TARGET_URL_WHATSAPP_MESSAGES);
+  await handleWebhook(req, res, process.env.TARGET_URL_WHATSAPP_MESSAGES || messagesUrl);
 });
 
+const convoUrl = 'https://dev.brijesh.fun/webhook/whatsapp/conv';
 router.post('/conv', async (req: Request, res: Response) => {
-  await handleWebhook(req, res, process.env.TARGET_URL_WHATSAPP_CONVO);
+  await handleWebhook(req, res, process.env.TARGET_URL_WHATSAPP_CONVO || convoUrl);
 });
 
 export default router;
