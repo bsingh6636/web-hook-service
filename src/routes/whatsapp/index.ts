@@ -7,6 +7,8 @@ import logger from '../../utils/logger';
 const router = Router();
 const source = 'whatsapp';
 
+//later add validation  if no req.body is received then return error
+
 const handleWebhook = async (req: Request, res: Response, targetUrl: string | undefined) => {
   logger.info(`Incoming webhook for source: ${source}`, { body: req.body, headers: req.headers });
 
@@ -16,7 +18,7 @@ const handleWebhook = async (req: Request, res: Response, targetUrl: string | un
     try {
       await saveFailedWebhook({
         source,
-        payload: req.body,
+        payload: req.body || {},
         headers: req.headers,
         target_url: 'NOT_CONFIGURED',
         error_message: errorMessage,
@@ -59,7 +61,7 @@ const handleWebhook = async (req: Request, res: Response, targetUrl: string | un
     try {
       await saveFailedWebhook({
         source,
-        payload: req.body,
+        payload: req.body || {},
         headers: req.headers,
         target_url: targetUrl || 'NOT_CONFIGURED',
         error_message: errorMessage,
