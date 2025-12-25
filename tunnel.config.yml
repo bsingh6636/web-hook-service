@@ -1,0 +1,8 @@
+tunnel: 66d84520-95b7-4d13-b04f-99c7b9da17e3
+credentials-file: /Users/brijesh/.cloudflared/66d84520-95b7-4d13-b04f-99c7b9da17e3.json
+
+ingress:
+  - hostname: dev.brijesh.fun
+    service: http://localhost:9988
+  - service: http_status:404
+
