@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import axios from 'axios';
+import axiosInstance from '../../utils/axiosInstance';
 import { saveFailedWebhook } from '../../services/webhookService';
 import logger from '../../utils/logger';
 
@@ -27,7 +28,7 @@ const handleWebhook = async (req: Request, res: Response, targetUrl: string | un
   }
 
   try {
-    await axios.post(targetUrl, req.body, { headers: { ...req.headers, host: new URL(targetUrl).host } });
+    await axiosInstance.getAxios().post(targetUrl, req.body);
     logger.info(`Webhook for source '${source}' forwarded successfully to ${targetUrl}`);
     res.status(200).send(`Webhook for '${source}' forwarded successfully`);
   } catch (error: unknown) {

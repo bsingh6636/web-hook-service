@@ -1,6 +1,7 @@
 
 import { Router, Request, Response } from 'express';
 import axios from 'axios';
+import axiosInstance from '../utils/axiosInstance';
 import { saveFailedWebhook } from '../services/webhookService';
 import whatsappRouter from './whatsapp';
 import logger from '../utils/logger';
@@ -41,7 +42,7 @@ router.post('/:source', async (req: Request, res: Response) => {
 
   try {
     // Forward the webhook
-    await axios.post(targetUrl, body, { headers });
+    await axiosInstance.getAxios().post(targetUrl, body);
     res.status(200).send(`Webhook for '${source}' forwarded successfully`);
   } catch (error: unknown) {
     // If forwarding fails, save the request to the database

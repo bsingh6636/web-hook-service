@@ -4,12 +4,14 @@ import { connectDB } from './db/database';
 import webhookRouter from './routes/webhook';
 import missedRequestsRouter from './routes/missedRequests';
 import { undefinedRouteHandler } from './routes/undefinedRoutes';
+import { requestContextMiddleware } from './middleware/requestContext';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 export const app = express();
 app.use(express.json());
+app.use(requestContextMiddleware);
 
 app.use(async (_req, _res, next) => {
   try {
