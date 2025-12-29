@@ -10,7 +10,11 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const app = express();
-app.use(express.json());
+app.use(express.json({
+  verify: (req, _res, buf) => {
+    (req as any).rawBody = buf;
+  },
+}));
 app.use(requestContextMiddleware);
 
 app.use(async (_req, _res, next) => {
