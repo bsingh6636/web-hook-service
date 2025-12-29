@@ -6,3 +6,4 @@ ingress:
     service: http://localhost:9988
   - service: http_status:404
 
+# cloudflared tunnel --config tunnel.config.yml run 66d84520-95b7-4d13-b04f-99c7b9da17e3

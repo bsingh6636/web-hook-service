@@ -12,6 +12,9 @@ const source = 'whatsapp';
 const handleWebhook = async (req: Request, res: Response, targetUrl: string | undefined) => {
   logger.info(`Incoming webhook for source: ${source}`, { body: req.body, headers: req.headers });
 
+  const rawBody = (req as any).rawBody;
+  const forwardBody = Buffer.isBuffer(rawBody) ? rawBody : req.body;
+
   if (!targetUrl) {
     const errorMessage = `Target URL for source '${source}' is not configured`;
     logger.error(errorMessage);
@@ -30,7 +33,14 @@ const handleWebhook = async (req: Request, res: Response, targetUrl: string | un
   }
 
   try {
-    await axiosInstance.getAxios().post(targetUrl, req.body);
+    await axiosInstance.getAxios().post(targetUrl, forwardBody, {
+      headers: {
+        'content-type': req.headers['content-type'] || 'application/json',
+      },
+      transformRequest: [(data) => data],
+      validateStatus: () => true,
+      maxBodyLength: Infinity,
+    });
     logger.info(`Webhook for source '${source}' forwarded successfully to ${targetUrl}`);
     res.status(200).send(`Webhook for '${source}' forwarded successfully`);
   } catch (error: unknown) {
