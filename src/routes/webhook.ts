@@ -8,7 +8,7 @@ import logger from '../utils/logger';
 
 const router = Router();
 
-const FACEBOOK_TARGET_URL = 'https://dev.brijesh.fun/webhook/facebook';
+const FACEBOOK_TARGET_URL = 'https://subs-local-backend.brijesh.fun/webhook/facebook';
 
 const sanitizeForwardHeaders = (headers: Request['headers']): Record<string, string | string[]> => {
   const sanitized: Record<string, string | string[]> = {};
@@ -200,7 +200,7 @@ router.get('/:source', async (req: Request, res: Response) => {
       logger.error(`Failed to persist failed webhook for source , send 200 data '${source}'`, { dbError });
     }
     // return res.status(500).send(`TARGET_URL not configured for '${source}'`);
-    
+
     return res.status(200).send(`webhook received for source '${source}'`);
   }
 
