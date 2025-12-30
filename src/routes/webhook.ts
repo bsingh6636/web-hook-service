@@ -141,6 +141,7 @@ router.post('/facebook', (req: Request, res: Response) => {
 // Generic GET route (e.g. Facebook verification)
 router.get('/:source', async (req: Request, res: Response) => {
   const { source } = req.params;
+  logger.info(`Processing GET webhook for source '${source}'`, { source, query: req.query });
 
   if (typeof source !== 'string' || source.trim() === '') {
     return res.status(200).send('Invalid source parameter');
@@ -179,7 +180,9 @@ router.get('/:source', async (req: Request, res: Response) => {
       res.setHeader('content-type', response.headers['content-type']);
     }
 
-    if (response.status < 200 || response.status >= 300) {
+    if (response.status >= 200 && response.status < 300) {
+      logger.info(`Successfully forwarded GET webhook for source '${source}' to ${targetUrl}`, { status: response.status });
+    } else {
       const errorMessage = `Non-2xx response while forwarding GET webhook for source '${source}': ${response.status}`;
       logger.error(errorMessage, { responseData: response.data });
       try {
@@ -245,6 +248,7 @@ router.get('/:source', async (req: Request, res: Response) => {
 // Generic route for other sources
 router.post('/:source', async (req: Request, res: Response) => {
   const { source } = req.params;
+  logger.info(`Processing POST webhook for source '${source}'`, { source });
 
   if (typeof source !== 'string' || source.trim() === '') {
     return res.status(200).send('Invalid source parameter');
@@ -284,7 +288,9 @@ router.post('/:source', async (req: Request, res: Response) => {
       maxBodyLength: Infinity,
     });
 
-    if (response.status < 200 || response.status >= 300) {
+    if (response.status >= 200 && response.status < 300) {
+      logger.info(`Successfully forwarded POST webhook for source '${source}' to ${targetUrl}`, { status: response.status });
+    } else {
       const errorMessage = `Non-2xx response while forwarding webhook for source '${source}': ${response.status}`;
       logger.error(errorMessage, { responseData: response.data });
       try {

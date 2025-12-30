@@ -5,6 +5,7 @@ import webhookRouter from './routes/webhook';
 import missedRequestsRouter from './routes/missedRequests';
 import { undefinedRouteHandler } from './services/undefinedRoutes';
 import { requestContextMiddleware } from './middleware/requestContext';
+import logger from './utils/logger';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -21,7 +22,7 @@ app.use(async (_req, _res, next) => {
   try {
     await connectDB();
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    logger.error('MongoDB connection error:', error);
   } finally {
     next();
   }
@@ -40,6 +41,6 @@ const PORT = process.env.PORT || 3000;
 
 if (require.main === module) {
   app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    logger.info(`Server is running on port ${PORT}`);
   });
 }

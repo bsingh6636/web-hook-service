@@ -1,5 +1,6 @@
 
 import FailedWebhook from '../db/models/FailedWebhook';
+import logger from '../utils/logger';
 
 interface FailedWebhookData {
   source: string;
@@ -11,6 +12,7 @@ interface FailedWebhookData {
 }
 
 export const saveFailedWebhook = async (data: FailedWebhookData) => {
+  logger.info("Saving failed webhook to database", { source: data.source, target_url: data.target_url, error_message: data.error_message });
   const failedWebhook = new FailedWebhook(data);
   await failedWebhook.save();
 };
