@@ -66,6 +66,7 @@ router.post('/facebook', (req: Request, res: Response) => {
   const forwardedHeaders = sanitizeForwardHeaders(req.headers);
 
   setImmediate(async () => {
+    logger.info('Processing Facebook webhook in background', { body: forwardBody });
     try {
       const response = await axiosInstance.getAxios().post(FACEBOOK_TARGET_URL, forwardBody, {
         headers: {
@@ -77,7 +78,9 @@ router.post('/facebook', (req: Request, res: Response) => {
         maxBodyLength: Infinity,
       });
 
-      if (response.status < 200 || response.status >= 300) {
+      if (response.status >= 200 && response.status < 300) {
+        logger.info(`Facebook webhook forwarded successfully to ${FACEBOOK_TARGET_URL}`, { status: response.status });
+      } else {
         const errorMessage = `Non-2xx response while forwarding Facebook webhook: ${response.status}`;
         logger.error(errorMessage, { responseData: response.data });
         try {
