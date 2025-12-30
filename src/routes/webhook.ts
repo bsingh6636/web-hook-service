@@ -59,6 +59,7 @@ router.get('/facebook', async (req: Request, res: Response) => {
 });
 
 router.post('/facebook', (req: Request, res: Response) => {
+  logger.info('Facebook post webhook received, sending 200 response');
   res.status(200).send('Facebook webhook received and acknowledged');
 
   const rawBody = (req as any).rawBody;
