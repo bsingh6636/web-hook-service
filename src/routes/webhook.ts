@@ -27,76 +27,17 @@ const sanitizeForwardHeaders = (headers: Request['headers']): Record<string, str
 router.use('/whatsapp', whatsappRouter);
 
 router.get('/facebook', (req: Request, res: Response) => {
-  const challenge = req.query?.['hub.challenge'];
-  const forwardedHeaders = sanitizeForwardHeaders(req.headers);
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
 
-  res.status(200).send(typeof challenge === 'string' ? challenge : 'Facebook webhook endpoint');
-
-  setImmediate(async () => {
-    try {
-      const response = await axiosInstance.getAxios().get(FACEBOOK_TARGET_URL, {
-        params: req.query,
-        headers: forwardedHeaders,
-        responseType: 'text',
-        transformResponse: [(data) => data],
-        validateStatus: () => true,
-      });
-
-      if (response.status < 200 || response.status >= 300) {
-        const errorMessage = `Non-2xx response while forwarding Facebook GET webhook: ${response.status}`;
-        logger.error(errorMessage, { responseData: response.data });
-        try {
-          await saveFailedWebhook({
-            source: 'facebook',
-            payload: req.query,
-            headers: req.headers,
-            target_url: FACEBOOK_TARGET_URL,
-            error_message: errorMessage,
-            error_details: { status: response.status, response: response.data },
-          });
-        } catch (dbError: unknown) {
-          logger.error(`Failed to persist failed webhook for source 'facebook'`, { dbError });
-        }
-      }
-    } catch (error: unknown) {
-      let errorMessage = 'An unknown error occurred';
-      let errorDetails: unknown = {};
-
-      if (axios.isAxiosError(error)) {
-        errorMessage = error.message;
-        errorDetails = {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-          headers: error.response?.headers,
-        };
-      } else if (error instanceof Error) {
-        errorMessage = error.message;
-        errorDetails = {
-          message: error.message,
-          stack: error.stack,
-        };
-      }
-
-      logger.error(`Failed to forward Facebook GET webhook to ${FACEBOOK_TARGET_URL}`, {
-        errorMessage,
-        errorDetails,
-      });
-
-      try {
-        await saveFailedWebhook({
-          source: 'facebook',
-          payload: req.query,
-          headers: req.headers,
-          target_url: FACEBOOK_TARGET_URL,
-          error_message: errorMessage,
-          error_details: errorDetails,
-        });
-      } catch (dbError: unknown) {
-        logger.error(`Failed to persist failed webhook for source 'facebook'`, { dbError });
-      }
-    }
-  });
+  if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
+    logger.info('WEBHOOK_VERIFIED');
+    res.status(200).send(challenge);
+  } else {
+    logger.error('Facebook webhook verification failed.', { mode, token, challenge });
+    res.sendStatus(403);
+  }
 });
 
 router.post('/facebook', (req: Request, res: Response) => {

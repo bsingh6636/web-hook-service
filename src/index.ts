@@ -3,10 +3,9 @@ import express from 'express';
 import { connectDB } from './db/database';
 import webhookRouter from './routes/webhook';
 import missedRequestsRouter from './routes/missedRequests';
-// import { undefinedRouteHandler } from './routes/undefinedRoutes';
+import { undefinedRouteHandler } from './services/undefinedRoutes';
 import { requestContextMiddleware } from './middleware/requestContext';
 import dotenv from 'dotenv';
-import { undefinedRouteHandler } from './services/undefinedRoutes';
 
 dotenv.config();
 
