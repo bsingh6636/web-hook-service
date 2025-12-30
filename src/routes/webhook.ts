@@ -26,16 +26,34 @@ const sanitizeForwardHeaders = (headers: Request['headers']): Record<string, str
 // Delegate to the WhatsApp router
 router.use('/whatsapp', whatsappRouter);
 
-router.get('/facebook', (req: Request, res: Response) => {
+router.get('/facebook', async (req: Request, res: Response) => {
+
+  const facebookVerifyToken = process.env.FACEBOOK_VERIFY_TOKEN;
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
 
-  if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
+  if (mode === 'subscribe' && token === facebookVerifyToken) {
     logger.info('WEBHOOK_VERIFIED');
     res.status(200).send(challenge);
   } else {
-    logger.error('Facebook webhook verification failed.', { mode, token, challenge });
+
+    let errorMessage = 'Facebook webhook verification failed.';
+
+    if (!facebookVerifyToken) {
+      errorMessage = "ENV variable FACEBOOK_VERIFY_TOKEN is not set";
+    }
+
+    await saveFailedWebhook({
+      source: 'facebook',
+      payload: req.body,
+      headers: req.headers,
+      target_url: FACEBOOK_TARGET_URL,
+      error_message: errorMessage,
+      error_details: { mode, token, challenge },
+    });
+
+    logger.error(errorMessage, { mode, token, challenge });
     res.sendStatus(403);
   }
 });
