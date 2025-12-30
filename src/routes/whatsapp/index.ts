@@ -90,7 +90,7 @@ router.get('/', async (req: Request, res: Response) => {
   try {
     await saveFailedWebhook({
       source,
-      payload: req.query,
+      payload: req.query || {},
       headers: req.headers,
       target_url: 'NOT_APPLICABLE_FOR_GET',
       error_message: `Test for source '${source}' is not configured`,

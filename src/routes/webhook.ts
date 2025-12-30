@@ -46,7 +46,7 @@ router.get('/facebook', async (req: Request, res: Response) => {
 
     await saveFailedWebhook({
       source: 'facebook',
-      payload: req.body,
+      payload: req.body || {},
       headers: req.headers,
       target_url: FACEBOOK_TARGET_URL,
       error_message: errorMessage,
@@ -83,7 +83,7 @@ router.post('/facebook', (req: Request, res: Response) => {
         try {
           await saveFailedWebhook({
             source: 'facebook',
-            payload: req.body,
+            payload: req.body || {},
             headers: req.headers,
             target_url: FACEBOOK_TARGET_URL,
             error_message: errorMessage,
@@ -121,7 +121,7 @@ router.post('/facebook', (req: Request, res: Response) => {
       try {
         await saveFailedWebhook({
           source: 'facebook',
-          payload: req.body,
+          payload: req.body || {},
           headers: req.headers,
           target_url: FACEBOOK_TARGET_URL,
           error_message: errorMessage,
@@ -150,7 +150,7 @@ router.get('/:source', async (req: Request, res: Response) => {
     try {
       await saveFailedWebhook({
         source,
-        payload: req.query,
+        payload: req.query || {},
         headers: req.headers,
         target_url: 'NOT_CONFIGURED',
         error_message: errorMessage,
@@ -181,7 +181,7 @@ router.get('/:source', async (req: Request, res: Response) => {
       try {
         await saveFailedWebhook({
           source,
-          payload: req.query,
+          payload: req.query || {},
           headers: req.headers,
           target_url: targetUrl,
           error_message: errorMessage,
@@ -221,7 +221,7 @@ router.get('/:source', async (req: Request, res: Response) => {
     try {
       await saveFailedWebhook({
         source,
-        payload: req.query,
+        payload: req.query || {},
         headers: req.headers,
         target_url: targetUrl,
         error_message: errorMessage,
@@ -254,7 +254,7 @@ router.post('/:source', async (req: Request, res: Response) => {
     try {
       await saveFailedWebhook({
         source,
-        payload: req.body,
+        payload: req.body || {},
         headers: req.headers,
         target_url: 'NOT_CONFIGURED',
         error_message: errorMessage,
