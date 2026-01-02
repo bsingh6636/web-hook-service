@@ -74,7 +74,6 @@ router.post('/facebook', (req: Request, res: Response) => {
           ...forwardedHeaders,
           'content-type': req.headers['content-type'] || 'application/json',
         },
-        transformRequest: [(data) => data],
         validateStatus: () => true,
         maxBodyLength: Infinity,
       });
@@ -283,7 +282,6 @@ router.post('/:source', async (req: Request, res: Response) => {
       headers: {
         'content-type': req.headers['content-type'] || 'application/json',
       },
-      transformRequest: [(data) => data],
       validateStatus: () => true,
       maxBodyLength: Infinity,
     });

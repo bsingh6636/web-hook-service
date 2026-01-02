@@ -37,7 +37,6 @@ const handleWebhook = async (req: Request, res: Response, targetUrl: string | un
       headers: {
         'content-type': req.headers['content-type'] || 'application/json',
       },
-      transformRequest: [(data) => data],
       validateStatus: () => true,
       maxBodyLength: Infinity,
     });
