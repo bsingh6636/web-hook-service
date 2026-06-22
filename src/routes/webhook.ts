@@ -244,6 +244,68 @@ router.get('/:source', async (req: Request, res: Response) => {
 
 
 
+// Dedicated Zoom webhook — proxies all events to the integration service.
+// endpoint.url_validation requires the CRC response proxied back synchronously;
+// all other events are fire-and-forget (Zoom only needs a 200 ack).
+router.post('/zoom', async (req: Request, res: Response) => {
+  const targetUrl = process.env.TARGET_URL_ZOOM || 'https://testing.brijeshdev.space/integration/zoom-webhook';
+  const isValidation = req.body?.event === 'endpoint.url_validation';
+
+  logger.info('Zoom webhook received', { event: req.body?.event, targetUrl });
+
+  const rawBody = (req as any).rawBody;
+  const forwardBody = Buffer.isBuffer(rawBody) ? rawBody : req.body;
+
+  try {
+    const response = await axiosInstance.getAxios().post(targetUrl, forwardBody, {
+      headers: { 'content-type': req.headers['content-type'] || 'application/json' },
+      validateStatus: () => true,
+      maxBodyLength: Infinity,
+    });
+
+    logger.info('Zoom webhook forwarded', { event: req.body?.event, status: response.status });
+
+    if (isValidation) {
+      // Proxy the integration service's {plainToken, encryptedToken} back to Zoom verbatim.
+      return res.status(200).json(response.data);
+    }
+
+    return res.status(200).json({ success: true });
+  } catch (error: unknown) {
+    let errorMessage = 'An unknown error occurred';
+    let errorDetails: unknown = {};
+
+    if (axios.isAxiosError(error)) {
+      errorMessage = error.message;
+      errorDetails = { message: error.message, response: error.response?.data, status: error.response?.status };
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+      errorDetails = { message: error.message };
+    }
+
+    logger.error('Failed to forward Zoom webhook', { errorMessage, errorDetails, targetUrl });
+
+    try {
+      await saveFailedWebhook({
+        source: 'zoom',
+        payload: req.body || {},
+        headers: req.headers,
+        target_url: targetUrl,
+        error_message: errorMessage,
+        error_details: errorDetails,
+      });
+    } catch (dbError: unknown) {
+      logger.error('Failed to persist failed Zoom webhook', { dbError });
+    }
+
+    // Still return 200 so Zoom doesn't retry non-validation events endlessly.
+    if (isValidation) {
+      return res.status(500).json({ success: false, message: 'Validation forwarding failed' });
+    }
+    return res.status(200).json({ success: true });
+  }
+});
+
 // Generic route for other sources
 router.post('/:source', async (req: Request, res: Response) => {
   const { source } = req.params;
