@@ -266,7 +266,9 @@ router.post('/zoom', async (req: Request, res: Response) => {
     logger.info('Zoom webhook forwarded', { event: req.body?.event, status: response.status });
 
     if (isValidation) {
-      // Proxy the integration service's {plainToken, encryptedToken} back to Zoom verbatim.
+      // no-transform tells Cloudflare not to Brotli/gzip compress this response.
+      // Zoom's CRC validator reads the raw body and does not decode compressed responses.
+      res.set('Cache-Control', 'no-transform');
       return res.status(200).json(response.data);
     }
 
@@ -298,10 +300,6 @@ router.post('/zoom', async (req: Request, res: Response) => {
       logger.error('Failed to persist failed Zoom webhook', { dbError });
     }
 
-    // Still return 200 so Zoom doesn't retry non-validation events endlessly.
-    if (isValidation) {
-      return res.status(500).json({ success: false, message: 'Validation forwarding failed' });
-    }
     return res.status(200).json({ success: true });
   }
 });
