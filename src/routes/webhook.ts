@@ -263,7 +263,7 @@ router.post('/zoom', async (req: Request, res: Response) => {
       maxBodyLength: Infinity,
     });
 
-    logger.info('Zoom webhook forwarded', { event: req.body?.event, status: response.status });
+    logger.info('Zoom webhook forwarded', { event: req.body?.event, status: response.status, data: response.data });
 
     if (isValidation) {
       // no-transform tells Cloudflare not to Brotli/gzip compress this response.
