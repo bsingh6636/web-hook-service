@@ -269,6 +269,10 @@ router.post('/zoom', async (req: Request, res: Response) => {
       // no-transform tells Cloudflare not to Brotli/gzip compress this response.
       // Zoom's CRC validator reads the raw body and does not decode compressed responses.
       res.set('Cache-Control', 'no-transform');
+      if (response.status !== 200) {
+        logger.error('Integration returned non-200 for Zoom validation', { status: response.status, data: response.data });
+        return res.status(500).json({ success: false, message: 'Validation failed' });
+      }
       return res.status(200).json(response.data);
     }
 
