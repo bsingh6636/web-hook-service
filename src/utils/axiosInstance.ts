@@ -12,7 +12,6 @@ class RequestContextAxios {
       timeout: 30000,
       maxRedirects: 5,
     });
-
     this.axiosInstance.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
         if (this.requestHeaders) {

@@ -65,6 +65,8 @@ const handleWebhook = async (req: Request, res: Response, targetUrl: string | un
     logger.error(`Failed to forward webhook for source '${source}' to ${targetUrl}`, {
       errorMessage,
       errorDetails,
+      body: req.body,
+      headers: req.headers,
     });
 
     try {
@@ -85,7 +87,7 @@ const handleWebhook = async (req: Request, res: Response, targetUrl: string | un
 };
 
 router.get('/', async (req: Request, res: Response) => {
-  logger.info(`Test webhook for source: ${source}`, { req });
+  logger.info(`Test webhook for source: ${source}`, { query: req.query, headers: req.headers });
   try {
     await saveFailedWebhook({
       source,

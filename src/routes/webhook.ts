@@ -59,7 +59,7 @@ router.get('/facebook', async (req: Request, res: Response) => {
 });
 
 router.post('/facebook', (req: Request, res: Response) => {
-  logger.info('Facebook post webhook received, sending 200 response');
+  logger.info('Facebook post webhook received, sending 200 response', { body: req.body, headers: req.headers });
   res.status(200).send('Facebook webhook received and acknowledged');
 
   const rawBody = (req as any).rawBody;
@@ -82,7 +82,7 @@ router.post('/facebook', (req: Request, res: Response) => {
         logger.info(`Facebook webhook forwarded successfully to ${FACEBOOK_TARGET_URL}`, { status: response.status });
       } else {
         const errorMessage = `Non-2xx response while forwarding Facebook webhook: ${response.status}`;
-        logger.error(errorMessage, { responseData: response.data });
+        logger.error(errorMessage, { responseData: response.data, body: req.body, headers: req.headers });
         try {
           await saveFailedWebhook({
             source: 'facebook',
@@ -119,6 +119,8 @@ router.post('/facebook', (req: Request, res: Response) => {
       logger.error(`Failed to forward Facebook webhook to ${FACEBOOK_TARGET_URL}`, {
         errorMessage,
         errorDetails,
+        body: req.body,
+        headers: req.headers,
       });
 
       try {
@@ -183,7 +185,7 @@ router.get('/:source', async (req: Request, res: Response) => {
       logger.info(`Successfully forwarded GET webhook for source '${source}' to ${targetUrl}`, { status: response.status });
     } else {
       const errorMessage = `Non-2xx response while forwarding GET webhook for source '${source}': ${response.status}`;
-      logger.error(errorMessage, { responseData: response.data });
+      logger.error(errorMessage, { responseData: response.data, query: req.query, headers: req.headers });
       try {
         await saveFailedWebhook({
           source,
@@ -222,6 +224,8 @@ router.get('/:source', async (req: Request, res: Response) => {
     logger.error(`Failed to forward GET webhook for source '${source}' to ${targetUrl}`, {
       errorMessage,
       errorDetails,
+      query: req.query,
+      headers: req.headers,
     });
 
     try {
@@ -251,7 +255,7 @@ router.post('/zoom', async (req: Request, res: Response) => {
   const targetUrl = process.env.TARGET_URL_ZOOM || 'https://testing.brijeshdev.space/integration/zoom-webhook';
   const isValidation = req.body?.event === 'endpoint.url_validation';
 
-  logger.info('Zoom webhook received', { event: req.body?.event, targetUrl });
+  logger.info('Zoom webhook received', { event: req.body?.event, targetUrl, body: req.body, headers: req.headers });
 
   const rawBody = (req as any).rawBody;
   const forwardBody = Buffer.isBuffer(rawBody) ? rawBody : req.body;
@@ -270,7 +274,7 @@ router.post('/zoom', async (req: Request, res: Response) => {
       // Zoom's CRC validator reads the raw body and does not decode compressed responses.
       res.set('Cache-Control', 'no-transform');
       if (response.status !== 200) {
-        logger.error('Integration returned non-200 for Zoom validation', { status: response.status, data: response.data });
+        logger.error('Integration returned non-200 for Zoom validation', { status: response.status, data: response.data, body: req.body, headers: req.headers });
         return res.status(500).json({ success: false, message: 'Validation failed' });
       }
       return res.status(200).json(response.data);
@@ -289,7 +293,7 @@ router.post('/zoom', async (req: Request, res: Response) => {
       errorDetails = { message: error.message };
     }
 
-    logger.error('Failed to forward Zoom webhook', { errorMessage, errorDetails, targetUrl });
+    logger.error('Failed to forward Zoom webhook', { errorMessage, errorDetails, targetUrl, body: req.body, headers: req.headers });
 
     try {
       await saveFailedWebhook({
@@ -311,7 +315,7 @@ router.post('/zoom', async (req: Request, res: Response) => {
 // Generic route for other sources
 router.post('/:source', async (req: Request, res: Response) => {
   const { source } = req.params;
-  logger.info(`Processing POST webhook for source '${source}'`, { source });
+  logger.info(`Processing POST webhook for source '${source}'`, { source, body: req.body });
 
   if (typeof source !== 'string' || source.trim() === '') {
     return res.status(200).send('Invalid source parameter');
@@ -321,7 +325,7 @@ router.post('/:source', async (req: Request, res: Response) => {
 
   if (!targetUrl) {
     const errorMessage = `TARGET_URL for source '${source}' is not set`;
-    logger.error(errorMessage);
+    logger.error(errorMessage, { body: req.body });
     try {
       await saveFailedWebhook({
         source,
@@ -354,7 +358,7 @@ router.post('/:source', async (req: Request, res: Response) => {
       logger.info(`Successfully forwarded POST webhook for source '${source}' to ${targetUrl}`, { status: response.status });
     } else {
       const errorMessage = `Non-2xx response while forwarding webhook for source '${source}': ${response.status}`;
-      logger.error(errorMessage, { responseData: response.data });
+      logger.error(errorMessage, { responseData: response.data, body, headers });
       try {
         await saveFailedWebhook({
           source,
@@ -394,6 +398,8 @@ router.post('/:source', async (req: Request, res: Response) => {
     logger.error(`Failed to forward webhook for source '${source}' to ${targetUrl}`, {
       errorMessage,
       errorDetails,
+      body,
+      headers,
     });
 
     try {
